@@ -31,7 +31,9 @@ var app = express();
 var zillow = new Zillow(ZILLOW_API_TOKEN_YOTAM2);
 //var db = mongojs(connectionString, [collections])
 
-app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.json({
+    limit: '50mb'
+}));
 app.use(express.static(__dirname + './../client'));
 
 app.use(function (req, res, next) {
@@ -163,8 +165,7 @@ app.get('/getZillowHouseDetails', function (req, res) {
                 console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') ' + results.message.text);
                 res.send(results);
             });
-    }
-    catch (ex) {
+    } catch (ex) {
         console.log(ex.stack);
         res.send(ex.message);
     }
@@ -178,19 +179,66 @@ app.post('/exportExcel', function (req, res) {
     let workbook = new exceljs.Workbook();
     let sheet = workbook.addWorksheet(timeStamp.format('MMMM YYYY'));
 
-    sheet.columns = [
-        { header: 'Auction #', key: 'auctionNumber', width: 11 },
-        { header: 'Address', key: 'address', width: 56 },
-        { header: 'Judgement', key: 'judgement', width: 10 },
-        { header: 'Tax', key: 'tax', width: 10 },
-        { header: 'Zillow Estimate', key: 'zillowEstimate', width: 14 },
-        { header: 'Sqft', key: 'sqft', width: 10 },
-        { header: 'Rooms', key: 'rooms', width: 7 },
-        { header: 'Baths', key: 'baths', width: 7 },
-        { header: 'Last Sold Price', key: 'lastSoldPrice', width: 13 },
-        { header: 'Last Sold Date', key: 'lastSoldDate', width: 13 },
-        { header: 'Plaintiff Name', key: 'plaintiffName', width: 40 },
-        { header: 'Sale Type', key: 'saleType', width: 22 },
+    sheet.columns = [{
+            header: 'Auction #',
+            key: 'auctionNumber',
+            width: 11
+        },
+        {
+            header: 'Address',
+            key: 'address',
+            width: 56
+        },
+        {
+            header: 'Judgement',
+            key: 'judgement',
+            width: 10
+        },
+        {
+            header: 'Tax',
+            key: 'tax',
+            width: 10
+        },
+        {
+            header: 'Zillow Estimate',
+            key: 'zillowEstimate',
+            width: 14
+        },
+        {
+            header: 'Sqft',
+            key: 'sqft',
+            width: 10
+        },
+        {
+            header: 'Rooms',
+            key: 'rooms',
+            width: 7
+        },
+        {
+            header: 'Baths',
+            key: 'baths',
+            width: 7
+        },
+        {
+            header: 'Last Sold Price',
+            key: 'lastSoldPrice',
+            width: 13
+        },
+        {
+            header: 'Last Sold Date',
+            key: 'lastSoldDate',
+            width: 13
+        },
+        {
+            header: 'Plaintiff Name',
+            key: 'plaintiffName',
+            width: 40
+        },
+        {
+            header: 'Sale Type',
+            key: 'saleType',
+            width: 22
+        },
         //TODO: Copy the following commented lines to the code where you export to DB EXCEL
         //{ header: 'Docket Number', key: 'docketNumber', width: 10 },
         //{ header: 'Zillow Link', key: 'link', width: 10 },
@@ -201,9 +249,14 @@ app.post('/exportExcel', function (req, res) {
     ];
 
     //%s: symbol %v: value %c: currency code (i.e: USD)
-    let currencyOptions = { format: '%s%v', symbol: '$' };
-    let numberOptions = { format: '%v' }; //TODO: after export is fixed try to enforce this!
-    forEach(req.body, function(house, key) {
+    let currencyOptions = {
+        format: '%s%v',
+        symbol: '$'
+    };
+    let numberOptions = {
+        format: '%v'
+    }; //TODO: after export is fixed try to enforce this!
+    forEach(req.body, function (house, key) {
         sheet.addRow({
             auctionNumber: house.auctionNumber,
             address: house.address,
@@ -220,26 +273,25 @@ app.post('/exportExcel', function (req, res) {
         });
     });
 
-    workbook.xlsx.writeFile('./exports/' + timeStamp.format('DD-MM-YYYY_HH-mm') + '_export.xlsx').then(function() {
+    workbook.xlsx.writeFile('./exports/' + timeStamp.format('DD-MM-YYYY_HH-mm') + '_export.xlsx').then(function () {
         console.log("Excel file was exported!");
         res.send('success');
     });
 
 });
-app.get('/getLawFirmJson', function (req, res){
+app.get('/getLawFirmJson', function (req, res) {
 
     options = {
-        sheet:'1',
+        sheet: '1',
         isColOriented: false,
         omitEmtpyFields: false
     };
 
     excelAsJson(LAW_FIRMS_EXCEL, LAW_FIRMS_JSON, options, (err, data) => {
-        if (err){
+        if (err) {
             console.log("JSON conversion failure:");
             console.log(err);
-        }
-        else {
+        } else {
 
             res.send(data);
             console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Downloaded Law Firm JSON');
@@ -253,7 +305,7 @@ app.get('/getJudgments', function (req, res) {
     let judgments = {};
 
     tinyReq(JUDGMENTS_URL, function (err, body) {
-        
+
         if (err) {
             console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Failed to get Judgments: ' + err.message);
             res.send('failed');
@@ -261,25 +313,25 @@ app.get('/getJudgments', function (req, res) {
 
         let $ = cheerio.load(body); // Parse the HTML 
         let judgmentsHTML = $("p:contains('$')");
-        
+
         for (var i = 0; i < judgmentsHTML.length; i++) {
 
             try {
                 judgments[judgmentsHTML[i].childNodes[0].data + judgmentsHTML[i].childNodes[1].children[0].data] = judgmentsHTML[i].childNodes[3].children[0].data;
             } catch (error) {
-                
-            }            
+
+            }
         }
 
         let workbook = new exceljs.Workbook();
-        workbook.xlsx.readFile('./backup/houses_db.xlsx').then(function() {
+        workbook.xlsx.readFile('./backup/houses_db.xlsx').then(function () {
             let worksheet = workbook.getWorksheet(1);
-            worksheet.spliceRows(0,1);
-            worksheet.eachRow(function(row, rowNumber) {
+            worksheet.spliceRows(0, 1);
+            worksheet.eachRow(function (row, rowNumber) {
                 try {
-                    judgments[row.getCell(13).value] = row.getCell(5).value;    
+                    judgments[row.getCell(13).value] = row.getCell(5).value;
                 } catch (error) {
-                    
+
                 }
             });
             console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Downloaded Judgments!');
@@ -295,12 +347,12 @@ app.post('/backupHouses', function (req, res) {
     console.log('(' + timeStamp.format('DD/MM/YYYY HH:mm:ss') + ') Backing up houses to Excel...');
 
     let workbook = new exceljs.Workbook();
-    workbook.xlsx.readFile('./backup/houses_db.xlsx').then(function() {
+    workbook.xlsx.readFile('./backup/houses_db.xlsx').then(function () {
 
         let worksheet = workbook.getWorksheet(1);
         let rows = [];
 
-        forEach(req.body, function(house, key) {
+        forEach(req.body, function (house, key) {
 
             let rowNumbers = findRowByDocketID(worksheet, house.docketNumber);
             if (rowNumbers !== -1) {
@@ -311,11 +363,11 @@ app.post('/backupHouses', function (req, res) {
 
         deleteDuplicateRows(worksheet, rows);
 
-        forEach(req.body, function(house, key) {
+        forEach(req.body, function (house, key) {
             addBackupRow(worksheet, house);
         });
 
-        workbook.xlsx.writeFile('./backup/houses_db.xlsx').then(function() {
+        workbook.xlsx.writeFile('./backup/houses_db.xlsx').then(function () {
             console.log("Houses were backed up!");
             res.send('success');
         });
@@ -334,8 +386,8 @@ var findRowByDocketID = function (worksheet, docketID) {
 
     let rows = [];
 
-    worksheet.eachRow(function(row, rowNumber) {
-        row.eachCell(function(cell, colNumber) {
+    worksheet.eachRow(function (row, rowNumber) {
+        row.eachCell(function (cell, colNumber) {
             if (cell.value === docketID) { //TODO: Make it look only in the column number of the Docket ID - after Yotam sends me the DB
                 rows.push(rowNumber);
             }
