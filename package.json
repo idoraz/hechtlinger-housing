@@ -1,0 +1,28 @@
+{
+  "name": "hechtlingerhousing",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "start http://localhost:3000 & node server.js"
+  },
+  "author": "Ido Raz",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "cheerio": "^1.0.0-rc.2",
+    "excel-as-json": "^2.0.1",
+    "exceljs": "^0.8.2",
+    "express": "^4.16.2",
+    "foreach": "^2.0.5",
+    "format-currency": "^1.0.0",
+    "mathjs": "^3.20.1",
+    "moment": "^2.20.1",
+    "mongojs": "^2.4.1",
+    "node-zillow": "^1.0.1",
+    "pdf2json": "^1.1.7",
+    "tinyreq": "^3.3.1"
+  },
+  "devDependencies": {}
+}
