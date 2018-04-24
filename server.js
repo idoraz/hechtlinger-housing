@@ -1,0 +1,387 @@
+const PORT_NUMBER = process.env.PORT || 3000;
+const BIDLIST_FILE_PATH = 'houses/blHousing.pdf';
+const POSTPENMENTS_FILE_PATH = 'houses/psHousing.pdf';
+const LAW_FIRMS_EXCEL = 'lawFirms/lawFirms.xlsx';
+const LAW_FIRMS_JSON = 'lawFirms/lawFirms.json';
+const BIDLIST_PDF_URL = 'http://www.sheriffalleghenycounty.com/pdfs/bid_list/bid_list.pdf';
+const POSTPONEMENTS_PDF_URL = 'http://www.sheriffalleghenycounty.com/pdfs/bid_list/postpone.pdf';
+const JUDGMENTS_URL = 'http://www.pittsburghlegaljournal.org/subscribe/pn_sheriffsale.php';
+//const SALE_RESULTS_PDF_URL = 'http://www.sheriffalleghenycounty.com/pdfs/bid_list/sale_results.pdf';
+const ZILLOW_API_TOKEN = 'X1-ZWz18uacwnt823_728x4';
+const ZILLOW_API_TOKEN_YOTAM = 'X1-ZWz1f5h9rt9de3_47pen';
+const ZILLOW_API_TOKEN_YOTAM2 = 'X1-ZWz19sgwikp5or_a1050';
+
+var express = require('express');
+//var mongojs = require('mongojs');
+var http = require('http');
+var fs = require('fs');
+var bodyParser = require('body-parser');
+var moment = require('moment');
+var PDFParser = require("pdf2json");
+var Zillow = require('node-zillow');
+var exceljs = require('exceljs');
+var forEach = require('foreach');
+var Math = require('mathjs');
+var formatCurrency = require('format-currency');
+var excelAsJson = require('excel-as-json').processFile;
+var cheerio = require('cheerio');
+var tinyReq = require('tinyreq');
+
+var app = express();
+var zillow = new Zillow(ZILLOW_API_TOKEN_YOTAM2);
+//var db = mongojs(connectionString, [collections])
+
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(express.static(__dirname + './../client'));
+
+app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+
+app.get('/', function (req, res) {
+    res.send('hello world');
+});
+
+app.get('/getHouses/', function (req, res) {
+    console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Downloading pdf files to server...');
+
+    var blFile = fs.createWriteStream(BIDLIST_FILE_PATH);
+    var psFile = fs.createWriteStream(POSTPENMENTS_FILE_PATH);
+
+    var bidListRequest = http.get(BIDLIST_PDF_URL, function (response) {
+        console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Bid List pdf file was downloaded!');
+        response.pipe(blFile);
+
+        var postponementsRequest = http.get(POSTPONEMENTS_PDF_URL, function (response) {
+
+            console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Postponements pdf file was downloaded!');
+            response.pipe(psFile);
+            res.send('Files downloaded successfully!');
+        });
+
+    });
+});
+/*app.get('/getPostponements/', function (req, res) {
+    console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Downloading postponements pdf...');
+
+    var file = fs.createWriteStream(FILE_PATH);
+    var request = http.get(PDF_URL, function (response) {
+        console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') File was downloaded!');
+
+        response.pipe(file);
+        res.send('File was downloaded!');
+    });
+});*/
+/*app.get('/getPostponements/:link', function (req, res) {
+    try {
+        console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Downloading postponements pdf from the following URL:');
+        console.log(req.params.link);
+
+        var file = fs.createWriteStream('Postponements/housing.pdf');
+        var request = http.get(req.params.link, function (response) {
+            console.log('File was downloaded!');
+
+            response.pipe(file);
+            res.send('File was downloaded!');
+        });
+    }
+    catch (ex) {
+        console.log(ex.stack);
+        res.send(ex.message);
+    }
+});*/
+
+app.get('/parseHouses', function (req, res) {
+    console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Parsing houses from pdf to json...');
+
+    let blPdfParser = new PDFParser();
+    let psPdfParser = new PDFParser();
+
+    blPdfParser.on("pdfParser_dataError", errData => {
+        console.error(errData.parserError);
+        res.send('failed');
+    });
+    blPdfParser.on("pdfParser_dataReady", blPdfData => {
+        fs.writeFile("./pdf2json/blHousing.json", JSON.stringify(blPdfData));
+        psPdfParser.loadPDF("./houses/psHousing.pdf");
+
+    });
+    psPdfParser.on("pdfParser_dataError", errData => {
+        console.error(errData.parserError);
+        res.send('failed');
+    });
+    psPdfParser.on("pdfParser_dataReady", psPdfData => {
+        fs.writeFile("./pdf2json/psHousing.json", JSON.stringify(psPdfData));
+        res.send('success');
+    });
+
+    blPdfParser.loadPDF("./houses/blHousing.pdf");
+
+});
+
+app.get('/getBidListJson', function (req, res) {
+
+    var file = "./pdf2json/blHousing.json";
+    var housing = require(file);
+
+    res.send(housing);
+    console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Downloaded Bid List JSON');
+});
+app.get('/getPostponementsJson', function (req, res) {
+
+    var file = "./pdf2json/psHousing.json";
+    var housing = require(file);
+
+    res.send(housing);
+    console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Downloaded Postponements JSON');
+});
+app.get('/downloadPostponementsJson', function (req, res) {
+
+    //We can use this if we want to download the JSON in the client - Currently not in use.
+    console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') sending postponements JSON...');
+
+    fs.readFile('./pdf2json/housing.json', function (err, content) {
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify(content));
+    });
+});
+
+app.get('/getZillowHouseDetails', function (req, res) {
+    try {
+
+        var parameters = {
+            'address': req.query.address,
+            'citystatezip': req.query.zipCode
+        }
+
+        console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Grabbing Zillow details...');
+
+        zillow.get('GetDeepSearchResults', parameters)
+            .then(function (results) {
+                console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') ' + results.message.text);
+                res.send(results);
+            });
+    }
+    catch (ex) {
+        console.log(ex.stack);
+        res.send(ex.message);
+    }
+});
+
+app.post('/exportExcel', function (req, res) {
+
+    let timeStamp = moment(Date.now());
+    console.log('(' + timeStamp.format('DD/MM/YYYY HH:mm:ss') + ') Exporting houses to Excel...');
+
+    let workbook = new exceljs.Workbook();
+    let sheet = workbook.addWorksheet(timeStamp.format('MMMM YYYY'));
+
+    sheet.columns = [
+        { header: 'Auction #', key: 'auctionNumber', width: 11 },
+        { header: 'Address', key: 'address', width: 56 },
+        { header: 'Judgement', key: 'judgement', width: 10 },
+        { header: 'Tax', key: 'tax', width: 10 },
+        { header: 'Zillow Estimate', key: 'zillowEstimate', width: 14 },
+        { header: 'Sqft', key: 'sqft', width: 10 },
+        { header: 'Rooms', key: 'rooms', width: 7 },
+        { header: 'Baths', key: 'baths', width: 7 },
+        { header: 'Last Sold Price', key: 'lastSoldPrice', width: 13 },
+        { header: 'Last Sold Date', key: 'lastSoldDate', width: 13 },
+        { header: 'Plaintiff Name', key: 'plaintiffName', width: 40 },
+        { header: 'Sale Type', key: 'saleType', width: 22 },
+        //TODO: Copy the following commented lines to the code where you export to DB EXCEL
+        //{ header: 'Docket Number', key: 'docketNumber', width: 10 },
+        //{ header: 'Zillow Link', key: 'link', width: 10 },
+        //{ header: 'Description', key: 'description', width: 10 }, // TODO: Need to ask Yotam where do I get it from?
+        //{ header: 'Latitude', key: 'lat', width: 10 },
+        //{ header: 'Longitude', key: 'long', width: 10 },
+
+    ];
+
+    //%s: symbol %v: value %c: currency code (i.e: USD)
+    let currencyOptions = { format: '%s%v', symbol: '$' };
+    let numberOptions = { format: '%v' }; //TODO: after export is fixed try to enforce this!
+    forEach(req.body, function(house, key) {
+        sheet.addRow({
+            auctionNumber: house.auctionNumber,
+            address: house.address,
+            judgement: house.judgment && house.judgment !== "" ? formatCurrency(Math.round(parseInt(house.judgment), 0), currencyOptions) : "",
+            tax: house.taxAssessment && house.taxAssessment !== "" ? formatCurrency(Math.round(house.taxAssessment, 0), currencyOptions) : "",
+            zillowEstimate: house.zillowEstimate && house.zillowEstimate !== "" ? formatCurrency(Math.round(house.zillowEstimate, 0), currencyOptions) : "",
+            sqft: house.sqft && house.sqft !== "" ? formatCurrency(house.sqft, numberOptions) : "",
+            rooms: house.rooms,
+            baths: house.bath,
+            lastSoldPrice: house.lastSoldPrice && house.lastSoldPrice !== "" ? formatCurrency(Math.round(house.lastSoldPrice, 0), currencyOptions) : "",
+            lastSoldDate: house.lastSoldDate,
+            plaintiffName: house.plaintiffName,
+            saleType: house.saleType
+        });
+    });
+
+    workbook.xlsx.writeFile('./exports/' + timeStamp.format('DD-MM-YYYY_HH-mm') + '_export.xlsx').then(function() {
+        console.log("Excel file was exported!");
+        res.send('success');
+    });
+
+});
+app.get('/getLawFirmJson', function (req, res){
+
+    options = {
+        sheet:'1',
+        isColOriented: false,
+        omitEmtpyFields: false
+    };
+
+    excelAsJson(LAW_FIRMS_EXCEL, LAW_FIRMS_JSON, options, (err, data) => {
+        if (err){
+            console.log("JSON conversion failure:");
+            console.log(err);
+        }
+        else {
+
+            res.send(data);
+            console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Downloaded Law Firm JSON');
+        }
+
+    });
+});
+
+app.get('/getJudgments', function (req, res) {
+
+    let judgments = {};
+
+    tinyReq(JUDGMENTS_URL, function (err, body) {
+        
+        if (err) {
+            console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Failed to get Judgments: ' + err.message);
+            res.send('failed');
+        }
+
+        let $ = cheerio.load(body); // Parse the HTML 
+        let judgmentsHTML = $("p:contains('$')");
+        
+        for (var i = 0; i < judgmentsHTML.length; i++) {
+
+            try {
+                judgments[judgmentsHTML[i].childNodes[0].data + judgmentsHTML[i].childNodes[1].children[0].data] = judgmentsHTML[i].childNodes[3].children[0].data;
+            } catch (error) {
+                
+            }            
+        }
+
+        let workbook = new exceljs.Workbook();
+        workbook.xlsx.readFile('./backup/houses_db.xlsx').then(function() {
+            let worksheet = workbook.getWorksheet(1);
+            worksheet.spliceRows(0,1);
+            worksheet.eachRow(function(row, rowNumber) {
+                try {
+                    judgments[row.getCell(13).value] = row.getCell(5).value;    
+                } catch (error) {
+                    
+                }
+            });
+            console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Downloaded Judgments!');
+            res.send(judgments);
+
+        });
+    });
+});
+
+app.post('/backupHouses', function (req, res) {
+
+    let timeStamp = moment(Date.now());
+    console.log('(' + timeStamp.format('DD/MM/YYYY HH:mm:ss') + ') Backing up houses to Excel...');
+
+    let workbook = new exceljs.Workbook();
+    workbook.xlsx.readFile('./backup/houses_db.xlsx').then(function() {
+
+        let worksheet = workbook.getWorksheet(1);
+        let rows = [];
+
+        forEach(req.body, function(house, key) {
+
+            let rowNumbers = findRowByDocketID(worksheet, house.docketNumber);
+            if (rowNumbers !== -1) {
+                rows = rows.concat(rowNumbers);
+            }
+
+        });
+
+        deleteDuplicateRows(worksheet, rows);
+
+        forEach(req.body, function(house, key) {
+            addBackupRow(worksheet, house);
+        });
+
+        workbook.xlsx.writeFile('./backup/houses_db.xlsx').then(function() {
+            console.log("Houses were backed up!");
+            res.send('success');
+        });
+
+    });
+
+});
+
+app.listen(PORT_NUMBER);
+console.log("Now serving on port: " + PORT_NUMBER);
+
+
+//*** Utility Function ***//
+
+var findRowByDocketID = function (worksheet, docketID) {
+
+    let rows = [];
+
+    worksheet.eachRow(function(row, rowNumber) {
+        row.eachCell(function(cell, colNumber) {
+            if (cell.value === docketID) { //TODO: Make it look only in the column number of the Docket ID - after Yotam sends me the DB
+                rows.push(rowNumber);
+            }
+        });
+    });
+
+    return rows.length > 0 ? rows : -1;
+};
+var deleteDuplicateRows = function (worksheet, dupRows) {
+
+    if (dupRows === -1) return;
+
+    dupRows = dupRows.sort(sortRowNumbers);
+    dupRows = dupRows.reverse();
+
+    forEach(dupRows, function (rowNumber, index) {
+        worksheet.spliceRows(rowNumber, 1);
+    });
+
+    return;
+
+};
+var addBackupRow = function (worksheet, house) {
+
+    let row = [];
+
+    row.push(house.auctionNumber);
+    row.push(''); //Page
+    row.push(house.address);
+    row.push(''); //Remarks
+    row.push(house.judgement);
+    row.push(house.taxAssessment);
+    row.push(house.zillowEstimate);
+    row.push(house.sqft);
+    row.push(house.rooms);
+    row.push(house.bath);
+    row.push(house.lastSoldPrice);
+    row.push(house.lastSoldDate);
+    row.push(house.docketNumber);
+    row.push(house.zillowLink);
+    row.push(house.description);
+    row.push(house.zillowID);
+
+    worksheet.addRow(row);
+};
+
+var sortRowNumbers = function (a, b) {
+    return a - b;
+}
