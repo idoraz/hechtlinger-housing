@@ -7,9 +7,6 @@ const BIDLIST_PDF_URL = 'http://www.sheriffalleghenycounty.com/pdfs/bid_list/bid
 const POSTPONEMENTS_PDF_URL = 'http://www.sheriffalleghenycounty.com/pdfs/bid_list/postpone.pdf';
 const JUDGMENTS_URL = 'http://www.pittsburghlegaljournal.org/subscribe/pn_sheriffsale.php';
 //const SALE_RESULTS_PDF_URL = 'http://www.sheriffalleghenycounty.com/pdfs/bid_list/sale_results.pdf';
-const ZILLOW_API_TOKEN = 'X1-ZWz18uacwnt823_728x4';
-const ZILLOW_API_TOKEN_YOTAM = 'X1-ZWz1f5h9rt9de3_47pen';
-const ZILLOW_API_TOKEN_YOTAM2 = 'X1-ZWz19sgwikp5or_a1050';
 
 var express = require('express');
 
