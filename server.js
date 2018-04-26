@@ -7,12 +7,10 @@ const BIDLIST_PDF_URL = 'http://www.sheriffalleghenycounty.com/pdfs/bid_list/bid
 const POSTPONEMENTS_PDF_URL = 'http://www.sheriffalleghenycounty.com/pdfs/bid_list/postpone.pdf';
 const JUDGMENTS_URL = 'http://www.pittsburghlegaljournal.org/subscribe/pn_sheriffsale.php';
 //const SALE_RESULTS_PDF_URL = 'http://www.sheriffalleghenycounty.com/pdfs/bid_list/sale_results.pdf';
-
+const ZILLOW_API_TOKEN = 'X1-ZWz18uacwnt823_728x4';
+const ZILLOW_API_TOKEN_YOTAM = 'X1-ZWz1f5h9rt9de3_47pen';
+const ZILLOW_API_TOKEN_YOTAM2 = 'X1-ZWz19sgwikp5or_a1050';
 var express = require('express');
-
-// Ido Raz
-
-//var mongojs = require('mongojs');
 var http = require('http');
 var fs = require('fs');
 var bodyParser = require('body-parser');
@@ -29,7 +27,6 @@ var tinyReq = require('tinyreq');
 
 var app = express();
 var zillow = new Zillow(ZILLOW_API_TOKEN_YOTAM2);
-//var db = mongojs(connectionString, [collections])
 
 app.use(bodyParser.json({
     limit: '50mb'
@@ -65,35 +62,6 @@ app.get('/getHouses/', function (req, res) {
 
     });
 });
-/*app.get('/getPostponements/', function (req, res) {
-    console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Downloading postponements pdf...');
-
-    var file = fs.createWriteStream(FILE_PATH);
-    var request = http.get(PDF_URL, function (response) {
-        console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') File was downloaded!');
-
-        response.pipe(file);
-        res.send('File was downloaded!');
-    });
-});*/
-/*app.get('/getPostponements/:link', function (req, res) {
-    try {
-        console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Downloading postponements pdf from the following URL:');
-        console.log(req.params.link);
-
-        var file = fs.createWriteStream('Postponements/housing.pdf');
-        var request = http.get(req.params.link, function (response) {
-            console.log('File was downloaded!');
-
-            response.pipe(file);
-            res.send('File was downloaded!');
-        });
-    }
-    catch (ex) {
-        console.log(ex.stack);
-        res.send(ex.message);
-    }
-});*/
 
 app.get('/parseHouses', function (req, res) {
     console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Parsing houses from pdf to json...');
@@ -239,12 +207,6 @@ app.post('/exportExcel', function (req, res) {
             key: 'saleType',
             width: 22
         },
-        //TODO: Copy the following commented lines to the code where you export to DB EXCEL
-        //{ header: 'Docket Number', key: 'docketNumber', width: 10 },
-        //{ header: 'Zillow Link', key: 'link', width: 10 },
-        //{ header: 'Description', key: 'description', width: 10 }, // TODO: Need to ask Yotam where do I get it from?
-        //{ header: 'Latitude', key: 'lat', width: 10 },
-        //{ header: 'Longitude', key: 'long', width: 10 },
 
     ];
 
@@ -255,7 +217,7 @@ app.post('/exportExcel', function (req, res) {
     };
     let numberOptions = {
         format: '%v'
-    }; //TODO: after export is fixed try to enforce this!
+    };
     forEach(req.body, function (house, key) {
         sheet.addRow({
             auctionNumber: house.auctionNumber,
