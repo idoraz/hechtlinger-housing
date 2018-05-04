@@ -26,7 +26,7 @@ var cheerio = require('cheerio');
 var tinyReq = require('tinyreq');
 
 var app = express();
-var zillow = new Zillow(ZILLOW_API_TOKEN_YOTAM2);
+var zillow = new Zillow(ZILLOW_API_TOKEN_YOTAM);
 
 app.use(bodyParser.json({
     limit: '50mb'
