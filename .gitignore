@@ -1,3 +1,6 @@
+# Server Data
+exports/
+
 # Logs
 logs
 *.log
