@@ -87,7 +87,7 @@ app.get('/parseHouses', function (req, res) {
         res.send('success');
     });
 
-    blPdfParser.loadPDF("./houses/blHousing.pdf");
+    blPdfParser.loadPDF(__dirname + "/houses/blHousing.pdf");
 
 });
 
