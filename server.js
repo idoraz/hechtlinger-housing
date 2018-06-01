@@ -207,6 +207,16 @@ app.post('/exportExcel', function (req, res) {
             key: 'saleType',
             width: 22
         },
+        {
+            header: 'Law Firm - Representative',
+            key: 'lawFirmRep',
+            width: 40
+        },
+        {
+            header: 'Law Firm - Contact Details',
+            key: 'lawFirmContact',
+            width: 56
+        }
 
     ];
 
@@ -231,7 +241,9 @@ app.post('/exportExcel', function (req, res) {
             lastSoldPrice: house.lastSoldPrice && house.lastSoldPrice !== "" ? formatCurrency(Math.round(house.lastSoldPrice, 0), currencyOptions) : "",
             lastSoldDate: house.lastSoldDate,
             plaintiffName: house.plaintiffName,
-            saleType: house.saleType
+            saleType: house.saleType,
+            lawFirmRep: house.firmName,
+            lawFirmContact: house.contactEmail
         });
     });
 
