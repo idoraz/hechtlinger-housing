@@ -24,6 +24,7 @@ var formatCurrency = require('format-currency');
 var excelAsJson = require('excel-as-json').processFile;
 var cheerio = require('cheerio');
 var tinyReq = require('tinyreq');
+var log = require('./api/log');
 
 var app = express();
 var zillow = new Zillow(ZILLOW_API_TOKEN_YOTAM);
@@ -40,7 +41,7 @@ app.use(function (req, res, next) {
 });
 
 app.get('/', function (req, res) {
-    res.send('hello world');
+    res.send('hello world');    
 });
 
 app.get('/getHouses/', function (req, res) {
@@ -241,14 +242,14 @@ app.post('/exportExcel', function (req, res) {
             lastSoldPrice: house.lastSoldPrice && house.lastSoldPrice !== "" ? formatCurrency(Math.round(house.lastSoldPrice, 0), currencyOptions) : "",
             lastSoldDate: house.lastSoldDate,
             plaintiffName: house.plaintiffName,
-            saleType: house.saleType,
+            saleType: house.isFC ? `${house.saleType} - FC` : house.saleType,
             lawFirmRep: house.firmName,
             lawFirmContact: house.contactEmail
         });
     });
 
     workbook.xlsx.writeFile('./exports/' + timeStamp.format('DD-MM-YYYY_HH-mm') + '_export.xlsx').then(function () {
-        console.log("Excel file was exported!");
+        console.log('(' + timeStamp.format('DD/MM/YYYY HH:mm:ss') + ') Excel file was exported!');
         res.send('success');
     });
 
@@ -263,7 +264,7 @@ app.get('/getLawFirmJson', function (req, res) {
 
     excelAsJson(LAW_FIRMS_EXCEL, LAW_FIRMS_JSON, options, (err, data) => {
         if (err) {
-            console.log("JSON conversion failure:");
+            console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') JSON conversion failure:');
             console.log(err);
         } else {
 
@@ -291,27 +292,26 @@ app.get('/getJudgments', function (req, res) {
         for (var i = 0; i < judgmentsHTML.length; i++) {
 
             try {
-                judgments[judgmentsHTML[i].childNodes[0].data + judgmentsHTML[i].childNodes[1].children[0].data] = judgmentsHTML[i].childNodes[3].children[0].data;
-            } catch (error) {
-
-            }
+                judgments[judgmentsHTML[i].childNodes[0].data + judgmentsHTML[i].childNodes[1].children[0].data] = parseFloat(judgmentsHTML[i].childNodes[3].children[0].data.replace(/,/g, ''));
+            } catch (error) {}
         }
 
-        let workbook = new exceljs.Workbook();
-        workbook.xlsx.readFile('./backup/houses_db.xlsx').then(function () {
-            let worksheet = workbook.getWorksheet(1);
-            worksheet.spliceRows(0, 1);
-            worksheet.eachRow(function (row, rowNumber) {
-                try {
-                    judgments[row.getCell(13).value] = row.getCell(5).value;
-                } catch (error) {
+        console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Downloaded Judgments!');
+        res.send(judgments);
 
-                }
-            });
-            console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Downloaded Judgments!');
-            res.send(judgments);
+        // let workbook = new exceljs.Workbook();
+        // workbook.xlsx.readFile('./backup/houses_db.xlsx').then(function () {
+        //     let worksheet = workbook.getWorksheet(1);
+        //     worksheet.spliceRows(0, 1);
+        //     worksheet.eachRow(function (row, rowNumber) {
+        //         try {
+        //             judgments[row.getCell(13).value] = row.getCell(5).value;
+        //         } catch (error) {
 
-        });
+        //         }
+        //     });
+
+        // });
     });
 });
 
@@ -392,7 +392,7 @@ var addBackupRow = function (worksheet, house) {
     row.push(''); //Page
     row.push(house.address);
     row.push(''); //Remarks
-    row.push(house.judgement);
+    row.push(house.judgment);
     row.push(house.taxAssessment);
     row.push(house.zillowEstimate);
     row.push(house.sqft);
