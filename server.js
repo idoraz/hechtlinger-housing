@@ -72,7 +72,10 @@ app.get('/parseHouses', function (req, res) {
 
     blPdfParser.on("pdfParser_dataError", errData => {
         console.error(errData.parserError);
-        res.send({error: true, message: "An error occured while reading the pdf files, please reload the page! If the error repeat try to close all open PDF reader windows and try again."});
+        res.send({
+            error: true,
+            message: "An error occured while reading the pdf files, please reload the page! If the error repeat try to close all open PDF reader windows and try again."
+        });
     });
     blPdfParser.on("pdfParser_dataReady", blPdfData => {
         fs.writeFile("./pdf2json/blHousing.json", JSON.stringify(blPdfData));
@@ -81,11 +84,17 @@ app.get('/parseHouses', function (req, res) {
     });
     psPdfParser.on("pdfParser_dataError", errData => {
         console.error(errData.parserError);
-        res.send({error: true, message: "An error occured while reading the pdf files, please reload the page! If the error repeat try to close all open PDF reader windows and try again."});
+        res.send({
+            error: true,
+            message: "An error occured while reading the pdf files, please reload the page! If the error repeat try to close all open PDF reader windows and try again."
+        });
     });
     psPdfParser.on("pdfParser_dataReady", psPdfData => {
         fs.writeFile("./pdf2json/psHousing.json", JSON.stringify(psPdfData));
-        res.send({error: false, message: "Success!"});
+        res.send({
+            error: false,
+            message: "Success!"
+        });
     });
 
     blPdfParser.loadPDF(__dirname + "/houses/blHousing.pdf");
@@ -370,11 +379,9 @@ var findRowByDocketID = function (worksheet, docketID) {
     let rows = [];
 
     worksheet.eachRow(function (row, rowNumber) {
-        row.eachCell(function (cell, colNumber) {
-            if (cell.value === docketID) { //TODO: Make it look only in the column number of the Docket ID - after Yotam sends me the DB
-                rows.push(rowNumber);
-            }
-        });
+        if (row.getCell(12).value === docketID) {
+            rows.push(rowNumber);
+        }
     });
 
     return rows.length > 0 ? rows : -1;
@@ -396,23 +403,22 @@ var deleteDuplicateRows = function (worksheet, dupRows) {
 var addBackupRow = function (worksheet, house) {
 
     let row = [];
-
-    row.push(house.auctionNumber);
-    row.push(''); //Page
-    row.push(house.address);
-    row.push(''); //Remarks
-    row.push(house.judgment);
-    row.push(house.taxAssessment);
-    row.push(house.zillowEstimate);
-    row.push(house.sqft);
-    row.push(house.rooms);
-    row.push(house.bath);
-    row.push(house.lastSoldPrice);
-    row.push(house.lastSoldDate);
-    row.push(house.docketNumber);
-    row.push(house.zillowLink);
-    row.push(house.description);
-    row.push(house.zillowID);
+    
+    row.push(house && house.auctionNumber && house.auctionNumber !== "" ? house.auctionNumber : "");
+    row.push(house && house.address && house.address !== "" ? house.address : "");
+    row.push(""); //Remarks
+    row.push(house && house.judgment && house.judgment !== "" ? house.judgment : "");
+    row.push(house && house.taxAssessment && house.taxAssessment !== "" ? parseInt(house.taxAssessment).toString() : "");
+    row.push(house && house.zillowEstimate && house.zillowEstimate !== "" ? house.zillowEstimate : "");
+    row.push(house && house.sqft && house.sqft !== "" ? house.sqft : "");
+    row.push(house && house.rooms && house.rooms !== "" ? house.rooms : "");
+    row.push(house && house.bath && house.bath !== "" ? house.bath : "");
+    row.push(house && house.lastSoldPrice && house.lastSoldPrice !== "" ? house.lastSoldPrice : "");
+    row.push(house && house.lastSoldDate && house.lastSoldDate !== "" ? house.lastSoldDate : "");
+    row.push(house && house.docketNumber && house.docketNumber !== "" ? house.docketNumber : "");
+    row.push(house && house.zillowLink && house.zillowLink !== "" ? house.zillowLink : "");
+    row.push(house && house.description && house.description !== "" ? house.description : "");
+    row.push(house && house.zillowID && house.zillowID !== "" ? house.zillowID : "");
 
     worksheet.addRow(row);
 };
