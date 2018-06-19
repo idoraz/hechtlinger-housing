@@ -41,7 +41,7 @@ app.use(function (req, res, next) {
 });
 
 app.get('/', function (req, res) {
-    res.send('hello world');    
+    res.send('hello world');
 });
 
 app.get('/getHouses/', function (req, res) {
@@ -72,7 +72,7 @@ app.get('/parseHouses', function (req, res) {
 
     blPdfParser.on("pdfParser_dataError", errData => {
         console.error(errData.parserError);
-        res.send('failed');
+        res.send({error: true, message: "An error occured while reading the pdf files, please reload the page! If the error repeat try to close all open PDF reader windows and try again."});
     });
     blPdfParser.on("pdfParser_dataReady", blPdfData => {
         fs.writeFile("./pdf2json/blHousing.json", JSON.stringify(blPdfData));
@@ -81,11 +81,11 @@ app.get('/parseHouses', function (req, res) {
     });
     psPdfParser.on("pdfParser_dataError", errData => {
         console.error(errData.parserError);
-        res.send('failed');
+        res.send({error: true, message: "An error occured while reading the pdf files, please reload the page! If the error repeat try to close all open PDF reader windows and try again."});
     });
     psPdfParser.on("pdfParser_dataReady", psPdfData => {
         fs.writeFile("./pdf2json/psHousing.json", JSON.stringify(psPdfData));
-        res.send('success');
+        res.send({error: false, message: "Success!"});
     });
 
     blPdfParser.loadPDF(__dirname + "/houses/blHousing.pdf");
@@ -233,16 +233,16 @@ app.post('/exportExcel', function (req, res) {
         sheet.addRow({
             auctionNumber: house.auctionNumber,
             address: house.address,
-            judgement: house.judgment && house.judgment !== "" ? formatCurrency(Math.round(parseInt(house.judgment), 0), currencyOptions) : "",
-            tax: house.taxAssessment && house.taxAssessment !== "" ? formatCurrency(Math.round(house.taxAssessment, 0), currencyOptions) : "",
-            zillowEstimate: house.zillowEstimate && house.zillowEstimate !== "" ? formatCurrency(Math.round(house.zillowEstimate, 0), currencyOptions) : "",
+            judgement: house.judgment && house.judgment !== "" ? formatCurrency(parseInt(house.judgment.replace(new RegExp(',', 'g'), '')), numberOptions) : "",
+            tax: house.taxAssessment && house.taxAssessment !== "" ? formatCurrency(parseInt(house.taxAssessment), numberOptions) : "",
+            zillowEstimate: house.zillowEstimate && house.zillowEstimate !== "" ? formatCurrency(parseInt(house.zillowEstimate), numberOptions) : "",
             sqft: house.sqft && house.sqft !== "" ? formatCurrency(house.sqft, numberOptions) : "",
             rooms: house.rooms,
             baths: house.bath,
-            lastSoldPrice: house.lastSoldPrice && house.lastSoldPrice !== "" ? formatCurrency(Math.round(house.lastSoldPrice, 0), currencyOptions) : "",
+            lastSoldPrice: house.lastSoldPrice && house.lastSoldPrice !== "" ? formatCurrency(parseInt(house.lastSoldPrice), numberOptions) : "",
             lastSoldDate: house.lastSoldDate,
             plaintiffName: house.plaintiffName,
-            saleType: house.isFC ? `${house.saleType} - FC` : house.saleType,
+            saleType: house.isFC ? "FC" : house.saleType,
             lawFirmRep: house.firmName,
             lawFirmContact: house.contactEmail
         });
@@ -286,15 +286,24 @@ app.get('/getJudgments', function (req, res) {
             res.send('failed');
         }
 
-        let $ = cheerio.load(body); // Parse the HTML 
-        let judgmentsHTML = $("p:contains('$')");
+        const $ = cheerio.load(body); // Parse the HTML 
+        const dockets = $('span#notice_case_number');
+        const judgmentSums = $('#notice_appraised_amount');
+        let index = 0;
 
-        for (var i = 0; i < judgmentsHTML.length; i++) {
-
+        dockets.each(function (key, docket) {
             try {
-                judgments[judgmentsHTML[i].childNodes[0].data + judgmentsHTML[i].childNodes[1].children[0].data] = parseFloat(judgmentsHTML[i].childNodes[3].children[0].data.replace(/,/g, ''));
-            } catch (error) {}
-        }
+                if (docket.firstChild.data.length < 10) {
+                    judgments[docket.prev.data + docket.firstChild.data] = judgmentSums[index].children[0].data;
+                } else {
+                    judgments[docket.firstChild.data] = judgmentSums[index].children[0].data;
+                }
+                index++;
+            } catch (err) {
+                console.log(err.message);
+                index++;
+            }
+        })
 
         console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Downloaded Judgments!');
         res.send(judgments);
