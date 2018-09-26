@@ -25,9 +25,10 @@ var excelAsJson = require('excel-as-json').processFile;
 var cheerio = require('cheerio');
 var tinyReq = require('tinyreq');
 var log = require('./api/log');
-
+var path = require('path');
 var app = express();
 var zillow = new Zillow(ZILLOW_API_TOKEN_YOTAM);
+
 
 app.use(bodyParser.json({
     limit: '50mb'
@@ -127,6 +128,22 @@ app.get('/downloadPostponementsJson', function (req, res) {
         res.send(JSON.stringify(content));
     });
 });
+
+app.get('/downloadExcel/:fileName', function (req, res) {
+    
+    const url = path.join(__dirname, `/exports/${req.params.fileName}.xlsx`);
+    res.setHeader('Content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.sendFile(url);
+
+});
+
+app.get('/downloadBackup', function (req, res) {
+    
+    const url = path.join(__dirname, `/backup/houses_db.xlsx`);
+    res.setHeader('Content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.sendFile(url);
+
+})
 
 app.get('/getZillowHouseDetails', function (req, res) {
     try {
@@ -257,9 +274,12 @@ app.post('/exportExcel', function (req, res) {
         });
     });
 
-    workbook.xlsx.writeFile('./exports/' + timeStamp.format('DD-MM-YYYY_HH-mm') + '_export.xlsx').then(function () {
+    const fileName = timeStamp.format('DD-MM-YYYY_HH-mm') + '_export.xlsx';
+    workbook.xlsx.writeFile(`./exports/${fileName}`).then(function () {
         console.log('(' + timeStamp.format('DD/MM/YYYY HH:mm:ss') + ') Excel file was exported!');
-        res.send('success');
+        res.send(fileName.replace('.xlsx', ''));
+    }, function () {
+        res.send('failed');
     });
 
 });
@@ -403,7 +423,7 @@ var deleteDuplicateRows = function (worksheet, dupRows) {
 var addBackupRow = function (worksheet, house) {
 
     let row = [];
-    
+
     row.push(house && house.auctionNumber && house.auctionNumber !== "" ? house.auctionNumber : "");
     row.push(house && house.address && house.address !== "" ? house.address : "");
     row.push(""); //Remarks
