@@ -187,37 +187,37 @@ app.post('/exportExcel', function (req, res) {
         {
             header: 'Judgement',
             key: 'judgement',
-            width: 10
+            width: 11
         },
         {
             header: 'Tax',
             key: 'tax',
-            width: 10
+            width: 8
         },
         {
             header: 'Zillow Estimate',
             key: 'zillowEstimate',
-            width: 14
+            width: 10
         },
         {
             header: 'Sqft',
             key: 'sqft',
-            width: 10
+            width: 6
         },
         {
             header: 'Rooms',
             key: 'rooms',
-            width: 7
+            width: 4
         },
         {
             header: 'Baths',
             key: 'baths',
-            width: 7
+            width: 4
         },
         {
             header: 'Last Sold Price',
             key: 'lastSoldPrice',
-            width: 13
+            width: 8
         },
         {
             header: 'Last Sold Date',
@@ -227,22 +227,22 @@ app.post('/exportExcel', function (req, res) {
         {
             header: 'Plaintiff Name',
             key: 'plaintiffName',
-            width: 40
+            width: 20
         },
         {
             header: 'Sale Type',
             key: 'saleType',
-            width: 22
+            width: 4
         },
         {
             header: 'Law Firm - Representative',
             key: 'lawFirmRep',
-            width: 40
+            width: 41
         },
         {
             header: 'Law Firm - Contact Details',
             key: 'lawFirmContact',
-            width: 56
+            width: 50
         }
 
     ];
