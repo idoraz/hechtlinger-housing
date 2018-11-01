@@ -1,4 +1,5 @@
-cd C:\dev\AngularJS\hectlingerHousing\server
-npm start
+@echo off
 
-pause
+pm2 resurrect
+
+echo "Done"
