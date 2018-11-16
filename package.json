@@ -20,6 +20,7 @@
     "mathjs": "^3.20.1",
     "moment": "^2.20.1",
     "mongojs": "^2.4.1",
+    "mongoose": "^5.3.9",
     "node-zillow": "^1.0.1",
     "pdf2json": "^1.1.7",
     "tinyreq": "^3.3.1"

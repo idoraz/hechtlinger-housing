@@ -28,7 +28,15 @@ var log = require('./api/log');
 var path = require('path');
 var app = express();
 var zillow = new Zillow(ZILLOW_API_TOKEN_YOTAM);
+const House = require('./models/house');
+const mongoose = require('mongoose');
 
+try {
+    mongoose.connect('mongodb://localhost/hechtlinger');
+    console.log('Connecto successfully to DB');
+} catch (error) {
+    console.log(`Failed to connect to MongoDB: ${error.message}`);
+}
 
 app.use(bodyParser.json({
     limit: '50mb'
@@ -130,7 +138,7 @@ app.get('/downloadPostponementsJson', function (req, res) {
 });
 
 app.get('/downloadExcel/:fileName', function (req, res) {
-    
+
     const url = path.join(__dirname, `/exports/${req.params.fileName}.xlsx`);
     res.setHeader('Content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.sendFile(url);
@@ -138,7 +146,7 @@ app.get('/downloadExcel/:fileName', function (req, res) {
 });
 
 app.get('/downloadBackup', function (req, res) {
-    
+
     const url = path.join(__dirname, `/backup/houses_db.xlsx`);
     res.setHeader('Content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.sendFile(url);
@@ -387,6 +395,25 @@ app.post('/backupHouses', function (req, res) {
 
     });
 
+});
+
+app.post('/saveHouse', function (req, res) {
+    try {
+        const house = new House({
+            _id: new mongoose.Types.ObjectId(),
+            address: req.body.address,
+            attorneyName: req.body.attorneyName
+        });
+
+        house.save().then(result => {
+            console.log(result);
+        }).catch(error => {
+            console.log(error);
+        })
+
+    } catch (error) {
+        console.log(error);
+    }
 });
 
 app.listen(PORT_NUMBER);
