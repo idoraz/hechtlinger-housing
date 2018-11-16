@@ -1,6 +1,7 @@
 # Server Data
 exports/*
 !exports/.gitkeep
+pdf2json/*
 
 # Logs
 logs
