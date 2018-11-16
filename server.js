@@ -253,8 +253,7 @@ app.post('/exportExcel', function (req, res) {
         symbol: '$'
     };
     let numberOptions = {
-        format: '%v',
-        maxFraction: 0
+        format: '%v'
     };
     forEach(req.body, function (house, key) {
         sheet.addRow({
