@@ -1,4 +1,14 @@
-const PORT_NUMBER = process.env.PORT || 3000;
+const envs = {
+    dev: {
+        url: "http://localhost",
+        port: "3004"
+    },
+    prod: {
+        url: "http://18.223.26.231",
+        port: "3000"
+    }
+};
+const PORT_NUMBER = process.env.PORT || envs.dev.port;
 const BIDLIST_FILE_PATH = 'houses/blHousing.pdf';
 const POSTPENMENTS_FILE_PATH = 'houses/psHousing.pdf';
 const LAW_FIRMS_EXCEL = 'lawFirms/lawFirms.xlsx';
@@ -8,6 +18,7 @@ const POSTPONEMENTS_PDF_URL = 'http://www.sheriffalleghenycounty.com/pdfs/bid_li
 const JUDGMENTS_URL = 'http://www.pittsburghlegaljournal.org/subscribe/pn_sheriffsale.php';
 //const SALE_RESULTS_PDF_URL = 'http://www.sheriffalleghenycounty.com/pdfs/bid_list/sale_results.pdf';
 const ZILLOW_API_TOKEN = 'X1-ZWz18uacwnt823_728x4';
+const ZILLOW_API_TOKEN2 = 'X1-ZWz1grxccbbthn_3tnpx';
 const ZILLOW_API_TOKEN_YOTAM = 'X1-ZWz1f5h9rt9de3_47pen';
 const ZILLOW_API_TOKEN_YOTAM2 = 'X1-ZWz19sgwikp5or_a1050';
 var express = require('express');
@@ -27,7 +38,7 @@ var tinyReq = require('tinyreq');
 var log = require('./api/log');
 var path = require('path');
 var app = express();
-var zillow = new Zillow(ZILLOW_API_TOKEN_YOTAM);
+var zillow = new Zillow(ZILLOW_API_TOKEN);
 
 
 app.use(bodyParser.json({
@@ -130,7 +141,7 @@ app.get('/downloadPostponementsJson', function (req, res) {
 });
 
 app.get('/downloadExcel/:fileName', function (req, res) {
-    
+
     const url = path.join(__dirname, `/exports/${req.params.fileName}.xlsx`);
     res.setHeader('Content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.sendFile(url);
@@ -138,7 +149,7 @@ app.get('/downloadExcel/:fileName', function (req, res) {
 });
 
 app.get('/downloadBackup', function (req, res) {
-    
+
     const url = path.join(__dirname, `/backup/houses_db.xlsx`);
     res.setHeader('Content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.sendFile(url);
