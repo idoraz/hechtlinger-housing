@@ -11,6 +11,8 @@ const envs = {
 const PORT_NUMBER = process.env.PORT || envs.dev.port;
 const BIDLIST_FILE_PATH = 'houses/blHousing.pdf';
 const POSTPENMENTS_FILE_PATH = 'houses/psHousing.pdf';
+const BIDLIST_JSON_FILE_PATH = './pdf2json/blHousing.json';
+const POSTPENMENTS_JSON_FILE_PATH = './pdf2json/psHousing.json';
 const LAW_FIRMS_EXCEL = 'lawFirms/lawFirms.xlsx';
 const LAW_FIRMS_JSON = 'lawFirms/lawFirms.json';
 const BIDLIST_PDF_URL = 'http://www.sheriffalleghenycounty.com/pdfs/bid_list/bid_list.pdf';
@@ -57,6 +59,14 @@ app.get('/', function (req, res) {
 });
 
 app.get('/getHouses/', function (req, res) {
+    
+    try {
+        fs.unlinkSync(BIDLIST_FILE_PATH);
+        fs.unlinkSync(POSTPENMENTS_FILE_PATH);
+    } catch (err) {
+        console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Failed to delete PDF files');
+    }
+
     console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Downloading pdf files to server...');
 
     var blFile = fs.createWriteStream(BIDLIST_FILE_PATH);
@@ -77,6 +87,7 @@ app.get('/getHouses/', function (req, res) {
 });
 
 app.get('/parseHouses', function (req, res) {
+    
     console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Parsing houses from pdf to json...');
 
     let blPdfParser = new PDFParser();
@@ -90,7 +101,8 @@ app.get('/parseHouses', function (req, res) {
         });
     });
     blPdfParser.on("pdfParser_dataReady", blPdfData => {
-        fs.writeFile("./pdf2json/blHousing.json", JSON.stringify(blPdfData));
+        fs.unlinkSync(BIDLIST_JSON_FILE_PATH);
+        fs.writeFile(BIDLIST_JSON_FILE_PATH, JSON.stringify(blPdfData));
         psPdfParser.loadPDF("./houses/psHousing.pdf");
 
     });
@@ -102,7 +114,8 @@ app.get('/parseHouses', function (req, res) {
         });
     });
     psPdfParser.on("pdfParser_dataReady", psPdfData => {
-        fs.writeFile("./pdf2json/psHousing.json", JSON.stringify(psPdfData));
+        fs.unlinkSync(POSTPENMENTS_JSON_FILE_PATH);
+        fs.writeFile(POSTPENMENTS_JSON_FILE_PATH, JSON.stringify(psPdfData));
         res.send({
             error: false,
             message: "Success!"
