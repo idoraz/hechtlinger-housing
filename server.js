@@ -48,7 +48,7 @@ app.use(bodyParser.json({
 }));
 app.use(express.static(__dirname + './../client'));
 
-app.use(function (req, res, next) {
+app.use(function (req, res, next) {    
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
@@ -61,6 +61,7 @@ app.get('/', function (req, res) {
 app.get('/getHouses/', function (req, res) {
     
     try {
+        console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Deleting PDF files...');
         fs.unlinkSync(BIDLIST_FILE_PATH);
         fs.unlinkSync(POSTPENMENTS_FILE_PATH);
     } catch (err) {
