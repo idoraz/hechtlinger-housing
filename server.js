@@ -42,7 +42,7 @@ var path = require('path');
 var app = express();
 var zillow = new Zillow(ZILLOW_API_TOKEN);
 
-
+app.set('etag', false); // This will disable cache for all http request headers - no 304 code anymore
 app.use(bodyParser.json({
     limit: '50mb'
 }));
