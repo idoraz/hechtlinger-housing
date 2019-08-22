@@ -21,8 +21,8 @@ const JUDGMENTS_URL = 'http://www.pittsburghlegaljournal.org/subscribe/pn_sherif
 //const SALE_RESULTS_PDF_URL = 'http://www.sheriffalleghenycounty.com/pdfs/bid_list/sale_results.pdf';
 const ZILLOW_API_TOKEN = 'X1-ZWz18uacwnt823_728x4';
 const ZILLOW_API_TOKEN2 = 'X1-ZWz1grxccbbthn_3tnpx';
-const ZILLOW_API_TOKEN_YOTAM = 'X1-ZWz1f5h9rt9de3_47pen';
-const ZILLOW_API_TOKEN_YOTAM2 = 'X1-ZWz19sgwikp5or_a1050';
+const ZILLOW_API_TOKEN_YOTAM2 = 'X1-ZWz1f5h9rt9de3_47pen';
+const ZILLOW_API_TOKEN_YOTAM = 'X1-ZWz19sgwikp5or_a1050';
 var express = require('express');
 var http = require('http');
 var fs = require('fs');
@@ -182,11 +182,12 @@ app.get('/getZillowHouseDetails', function (req, res) {
 
         zillow.get('GetDeepSearchResults', parameters)
             .then(function (results) {
+                if (results.message.code !== '0') { throw new Error(results.message.text); }
                 console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') ' + results.message.text);
                 res.send(results);
             });
     } catch (ex) {
-        console.log(ex.stack);
+        console.log(ex);
         res.send(ex.message);
     }
 });
