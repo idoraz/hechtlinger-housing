@@ -21,8 +21,8 @@ const JUDGMENTS_URL = 'http://www.pittsburghlegaljournal.org/subscribe/pn_sherif
 //const SALE_RESULTS_PDF_URL = 'http://www.sheriffalleghenycounty.com/pdfs/bid_list/sale_results.pdf';
 const ZILLOW_API_TOKEN = 'X1-ZWz18uacwnt823_728x4';
 const ZILLOW_API_TOKEN2 = 'X1-ZWz1grxccbbthn_3tnpx';
-const ZILLOW_API_TOKEN_YOTAM2 = 'X1-ZWz1f5h9rt9de3_47pen';
-const ZILLOW_API_TOKEN_YOTAM = 'X1-ZWz19sgwikp5or_a1050';
+const ZILLOW_API_TOKEN_YOTAM = 'X1-ZWz1f5h9rt9de3_47pen';
+const ZILLOW_API_TOKEN_YOTAM2 = 'X1-ZWz19sgwikp5or_a1050';
 var express = require('express');
 var http = require('http');
 var fs = require('fs');
@@ -40,7 +40,7 @@ var tinyReq = require('tinyreq');
 var log = require('./api/log');
 var path = require('path');
 var app = express();
-var zillow = new Zillow(ZILLOW_API_TOKEN_YOTAM2);
+var zillow = new Zillow(ZILLOW_API_TOKEN);
 
 app.set('etag', false); // This will disable cache for all http request headers - no 304 code anymore
 app.use(bodyParser.json({
@@ -48,7 +48,7 @@ app.use(bodyParser.json({
 }));
 app.use(express.static(__dirname + './../client'));
 
-app.use(function (req, res, next) {    
+app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
@@ -59,7 +59,7 @@ app.get('/', function (req, res) {
 });
 
 app.get('/getHouses/', function (req, res) {
-    
+
     try {
         console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Deleting PDF files...');
         fs.unlinkSync(BIDLIST_FILE_PATH);
@@ -88,7 +88,7 @@ app.get('/getHouses/', function (req, res) {
 });
 
 app.get('/parseHouses', function (req, res) {
-    
+
     console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') Parsing houses from pdf to json...');
 
     let blPdfParser = new PDFParser();
@@ -185,6 +185,8 @@ app.get('/getZillowHouseDetails', function (req, res) {
                 if (results.message.code !== '0') { throw new Error(results.message.text); }
                 console.log('(' + moment(Date.now()).format('DD/MM/YYYY HH:mm:ss') + ') ' + results.message.text);
                 res.send(results);
+            }, error => {
+                throw error;
             });
     } catch (ex) {
         console.log(ex);
@@ -201,75 +203,75 @@ app.post('/exportExcel', function (req, res) {
     let sheet = workbook.addWorksheet(timeStamp.format('MMMM YYYY'));
 
     sheet.columns = [{
-            header: 'Auction #',
-            key: 'auctionNumber',
-            width: 11
-        },
-        {
-            header: 'Address',
-            key: 'address',
-            width: 56
-        },
-        {
-            header: 'Judgement',
-            key: 'judgement',
-            width: 11
-        },
-        {
-            header: 'Tax',
-            key: 'tax',
-            width: 8
-        },
-        {
-            header: 'Zillow Estimate',
-            key: 'zillowEstimate',
-            width: 10
-        },
-        {
-            header: 'Sqft',
-            key: 'sqft',
-            width: 6
-        },
-        {
-            header: 'Rooms',
-            key: 'rooms',
-            width: 4
-        },
-        {
-            header: 'Baths',
-            key: 'baths',
-            width: 4
-        },
-        {
-            header: 'Last Sold Price',
-            key: 'lastSoldPrice',
-            width: 8
-        },
-        {
-            header: 'Last Sold Date',
-            key: 'lastSoldDate',
-            width: 13
-        },
-        {
-            header: 'Plaintiff Name',
-            key: 'plaintiffName',
-            width: 20
-        },
-        {
-            header: 'Sale Type',
-            key: 'saleType',
-            width: 4
-        },
-        {
-            header: 'Law Firm - Representative',
-            key: 'lawFirmRep',
-            width: 41
-        },
-        {
-            header: 'Law Firm - Contact Details',
-            key: 'lawFirmContact',
-            width: 50
-        }
+        header: 'Auction #',
+        key: 'auctionNumber',
+        width: 11
+    },
+    {
+        header: 'Address',
+        key: 'address',
+        width: 56
+    },
+    {
+        header: 'Judgement',
+        key: 'judgement',
+        width: 11
+    },
+    {
+        header: 'Tax',
+        key: 'tax',
+        width: 8
+    },
+    {
+        header: 'Zillow Estimate',
+        key: 'zillowEstimate',
+        width: 10
+    },
+    {
+        header: 'Sqft',
+        key: 'sqft',
+        width: 6
+    },
+    {
+        header: 'Rooms',
+        key: 'rooms',
+        width: 4
+    },
+    {
+        header: 'Baths',
+        key: 'baths',
+        width: 4
+    },
+    {
+        header: 'Last Sold Price',
+        key: 'lastSoldPrice',
+        width: 8
+    },
+    {
+        header: 'Last Sold Date',
+        key: 'lastSoldDate',
+        width: 13
+    },
+    {
+        header: 'Plaintiff Name',
+        key: 'plaintiffName',
+        width: 20
+    },
+    {
+        header: 'Sale Type',
+        key: 'saleType',
+        width: 4
+    },
+    {
+        header: 'Law Firm - Representative',
+        key: 'lawFirmRep',
+        width: 41
+    },
+    {
+        header: 'Law Firm - Contact Details',
+        key: 'lawFirmContact',
+        width: 50
+    }
 
     ];
 
