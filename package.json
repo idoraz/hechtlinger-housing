@@ -17,7 +17,7 @@
     "express": "^4.16.2",
     "foreach": "^2.0.5",
     "format-currency": "^1.0.0",
-    "mathjs": "^3.20.1",
+    "mathjs": "^7.5.1",
     "moment": "^2.20.1",
     "mongojs": "^2.4.1",
     "node-zillow": "^1.0.1",
